@@ -1,0 +1,156 @@
+---
+#
+# This is the canonical configuration for the `README.md`
+# Run `make readme` to rebuild the `README.md`
+#
+
+# Name of this project
+name: Terraform AWS S3
+
+# License of this project
+license: "APACHE"
+
+# Canonical GitHub repo
+github_repo: clouddrove/terraform-aws-s3
+
+# Badges to display
+badges:
+  - name: "Terraform"
+    image: "https://img.shields.io/badge/Terraform-v1.1.7-green"
+    url: "https://www.terraform.io"
+  - name: "Licence"
+    image: "https://img.shields.io/badge/License-APACHE-blue.svg"
+    url: "LICENSE.md"
+  - name: "tfsec"
+    image: "https://github.com/clouddrove/terraform-aws-s3/actions/workflows/tfsec.yml/badge.svg"
+    url: "https://github.com/clouddrove/terraform-aws-s3/actions/workflows/tfsec.yml"
+  - name: "static-checks"
+    image: "https://github.com/clouddrove/terraform-aws-s3/actions/workflows/terraform.yml/badge.svg"
+    url: "https://github.com/clouddrove/terraform-aws-s3/actions/workflows/terraform.yml"
+
+#  description of this project
+# yamllint disable rule:line-length
+description: |-
+  Terraform module to create default S3 bucket with logging and encryption type specific features.
+
+# extra content
+include:
+  - "terraform.md"
+
+# How to use this project
+# yamllint disable rule:line-length
+usage: |-
+  Here are some examples of how you can use this module in your inventory structure:
+  ### Default Bucket
+  ```hcl
+  module "s3_bucket" {
+    source              = "clouddrove/s3/aws"
+    version             = "1.3.0"
+    name                = "clouddrove-secure-bucket"
+    environment         = "test"
+    label_order         = ["name", "environment"]
+    versioning          = true
+    acl                 = "private"
+    bucket_enabled      = true
+  }
+  ```
+  ### Encryption Bucket
+  ```hcl
+  module "s3_bucket" {
+    source                     = "clouddrove/s3/aws"
+    version                    = "1.3.0"
+    name                       = "clouddrove-encryption-bucket"
+    environment                = "test"
+    label_order                = ["name", "environment"]
+    versioning                 = true
+    acl                        = "private"
+    bucket_encryption_enabled  = true
+    sse_algorithm              = "aws:kms"
+    kms_master_key_id          = module.kms_key.key_arn
+  }
+  ### Logging-Encryption Bucket
+  ```hcl
+  module "s3_bucket" {
+    source                             = "clouddrove/s3/aws"
+    version                            = "1.3.0"
+    name                               = "clouddrove-logging-encryption-bucket"
+    environment                        = "test"
+    label_order                        = ["name", "environment"]
+    versioning                         = true
+    acl                                = "private"
+    bucket_logging_encryption_enabled  = true
+    sse_algorithm                      = "AES256"
+    target_bucket                      = "bucket-logs12"
+    target_prefix                      = "logs"
+  }
+  ```
+  ### Logging Bucket
+  ```hcl
+  module "s3_bucket" {
+    source                  = "clouddrove/s3/aws"
+    version                 = "1.3.0"
+    name                    = "clouddrove-logging-bucket"
+    environment             = "test"
+    label_order             = ["name", "environment"]
+    versioning              = true
+    acl                     = "private"
+    bucket_logging_enabled  = true
+    target_bucket           = "bucket-logs12"
+    target_prefix           = "logs"
+  }
+  ```
+  ### Website Host Bucket
+  ```hcl
+  module "s3_bucket" {
+    source                              = "clouddrove/s3/aws"
+    version                             = "1.3.0"
+    name                                = "clouddrove-website-bucket"
+    environment                         = "test"
+    label_order                         = ["name", "environment"]
+    versioning                          = true
+    acl                                 = "private"
+    website_hosting_bucket              = true
+    website_index                       = "index.html"
+    website_error                       = "error.html"
+    bucket_policy                       = true
+    lifecycle_expiration_enabled        = true
+    lifecycle_expiration_object_prefix  = "test"
+    lifecycle_days_to_expiration        = 10
+    aws_iam_policy_document             = data.aws_iam_policy_document.default.json
+  }
+  data "aws_iam_policy_document" "default" {
+    version = "2012-10-17"
+    statement {
+         sid = "Stmt1547315805704"
+         effect = "Allow"
+         principals {
+              type = "AWS"
+              identifiers = ["*"]
+            }
+         actions = ["s3:GetObject"]
+         resources = ["arn:aws:s3:::clouddrove-website-bucket-test/*"]
+     }
+  }
+  ```
+
+   ### Cors Bucket
+  ```hcl
+    module "s3_bucket" {
+    source = "./../../"
+
+    name        = "clouddrove-secure-bucket"
+    environment = "test"
+    attributes  = ["private"]
+    label_order = ["name", "environment"]
+
+    versioning = true
+    acl        = "private"
+    cors_rule = [{
+    "allowed_headers" : ["*"]
+    allowed_methods = ["PUT", "POST"],
+    allowed_origins = ["https://s3-website-test.hashicorp.com"],
+    expose_headers  = ["ETag"],
+    max_age_seconds = 3000 }]
+  }
+
+  ```
